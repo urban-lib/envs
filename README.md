@@ -4,6 +4,7 @@ export APP_DB_PASSWORD=<password>
 ```
 
 or `.env` if using `github.com/joho/godotenv`
+
 ```bash
 # .env
 APP_CONFIG=develop
@@ -25,5 +26,17 @@ func main() {
 	// check existing environments
 	envs.PrintAppEnvironments()
 	...
+}
+
+type Config struct {
+	UseConf    string
+	DbPassword string
+}
+
+func initConfig() *Config {
+	return &Config{
+		UseConf:    envs.Get("APP_CONFIG"),
+		DbPassword: envs.Get("APP_DB_PASSWORD"),
+	}
 }
 ```
