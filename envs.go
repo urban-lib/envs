@@ -52,7 +52,7 @@ func PrintAppEnvironments() {
 
 func formatLog(e *env, params ...interface{}) {
 	if e != nil {
-		if e.Require && len(os.Getenv(e.Name)) == 0 {
+		if e.Require && len(os.Getenv(e.Name)) == 0 && len(e.Default) == 0 {
 			log.Fatalf("Require environment is empty: %s", e.Name)
 		}
 		log.Println("\t", e.Name, len(os.Getenv(e.Name)) > 0)
