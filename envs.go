@@ -3,9 +3,13 @@ package envs
 import (
 	"log"
 	"os"
+	"sync"
 )
 
-var envs []*env
+var (
+	envs map[string]*env
+	once sync.Once
+)
 
 type Envs interface {
 	Value()
@@ -26,23 +30,17 @@ func (e *env) Value() string {
 }
 
 func NewEnv(name string, require bool, def string) {
-	envs = append(envs, &env{
+	once.Do(func() {
+		envs = make(map[string]*env)
+	})
+	envs[name] = &env{
 		Name:    name,
 		Require: require,
 		Default: def,
-	})
-}
-
-func Get(name string) string {
-	for _, e := range envs {
-		if e.Name == name {
-			return e.Value()
-		}
 	}
-	return ""
 }
 
-func PrintAppEnvironments() {
+func CheckEnvironments() {
 	formatLog(nil, "*********** Project environments ***********")
 	for _, e := range envs {
 		formatLog(e)
