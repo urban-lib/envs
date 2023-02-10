@@ -1,8 +1,11 @@
 package envs
 
 import (
+	"github.com/jedib0t/go-pretty/v6/table"
 	"log"
 	"os"
+	"sort"
+	"strings"
 	"sync"
 )
 
@@ -41,18 +44,41 @@ func NewEnv(name string, require bool, def string) {
 }
 
 func CheckEnvironments() {
-	formatLog(nil, "*********** Project environments ***********")
-	for _, e := range envs {
-		formatLog(e)
+	keys := make([]string, 0, len(envs))
+	for key := range envs {
+		keys = append(keys, key)
 	}
-	formatLog(nil, "********************************************")
+	sort.Strings(keys)
+
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"Name", "Default", "Environment value"})
+	for _, k := range keys {
+		if envs[k].Require && len(os.Getenv(envs[k].Name)) == 0 && len(envs[k].Default) == 0 {
+			log.Fatalf("Require environment is empty: %s", envs[k].Name)
+		}
+		var defaultValue, envValue string
+		if strings.Contains(envs[k].Name, "PASS") || strings.Contains(envs[k].Name, "PASSWORD") {
+			if envs[k].Default != "" {
+				defaultValue = "******"
+			}
+			envValue = "******"
+		} else {
+			defaultValue = envs[k].Default
+			envValue = os.Getenv(envs[k].Name)
+		}
+		t.AppendRow(table.Row{
+			envs[k].Name,
+			defaultValue,
+			envValue,
+		})
+	}
+	t.Render()
 }
 
 func formatLog(e *env, params ...interface{}) {
 	if e != nil {
-		if e.Require && len(os.Getenv(e.Name)) == 0 && len(e.Default) == 0 {
-			log.Fatalf("Require environment is empty: %s", e.Name)
-		}
+
 		log.Println("\t", e.Name, len(os.Getenv(e.Name)) > 0)
 	} else {
 		log.Println(params...)
